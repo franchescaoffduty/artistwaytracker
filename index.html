@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Artist's Way — Weekly Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #f5f0e8;
+      --cream-dark: #ede6d6;
+      --ink: #1a1612;
+      --ink-light: #4a3f35;
+      --ink-faint: #9a8e82;
+      --rust: #b5461e;
+      --rust-light: #e8c4b4;
+      --border: #d4c9b8;
+      --border-light: #e8e0d2;
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-mono: 'DM Mono', monospace;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: var(--font-serif);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── Layout ── */
+    .page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 2rem 6rem;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .header::after {
+      content: '✦';
+      display: block;
+      position: absolute;
+      bottom: -0.6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--cream);
+      padding: 0 0.75rem;
+      font-size: 0.7rem;
+      color: var(--rust);
+      letter-spacing: 0.2em;
+    }
+    .header-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 0.75rem;
+    }
+    .header h1 {
+      font-size: 2.6rem;
+      font-weight: 300;
+      font-style: italic;
+      line-height: 1.1;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    .header-sub {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-top: 0.75rem;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      background: none;
+      border: none;
+      padding: 0.75rem 1.5rem 0.75rem 0;
+      cursor: pointer;
+      border-bottom: 1px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.2s;
+    }
+    .tab:hover { color: var(--ink); }
+    .tab.active {
+      color: var(--rust);
+      border-bottom-color: var(--rust);
+    }
+
+    /* ── Panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Week navigation ── */
+    .week-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .week-nav-btn {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      color: var(--ink-faint);
+      background: none;
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .week-nav-btn:hover {
+      border-color: var(--ink-light);
+      color: var(--ink);
+    }
+    .week-meta { text-align: center; }
+    .week-title {
+      font-size: 1.3rem;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--ink);
+    }
+    .week-range {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-top: 0.3rem;
+    }
+
+    /* ── Stats ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--cream);
+      padding: 1rem 1.25rem;
+      text-align: center;
+    }
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 0.4rem;
+    }
+    .stat-val {
+      font-size: 2rem;
+      font-weight: 300;
+      color: var(--ink);
+      line-height: 1;
+    }
+
+    /* ── Progress ── */
+    .progress-wrap { margin-bottom: 2rem; }
+    .progress-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .progress-track {
+      height: 2px;
+      background: var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--rust);
+      transition: width 0.4s ease;
+    }
+
+    /* ── Task list ── */
+    .task-list { display: flex; flex-direction: column; }
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-light);
+      cursor: default;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .task-item:first-child { border-top: 1px solid var(--border-light); }
+    .task-item.done { opacity: 0.45; }
+    .task-item.done .task-text { text-decoration: line-through; }
+
+    .task-check {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      margin-top: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      background: var(--cream);
+    }
+    .task-check:hover { border-color: var(--rust); }
+    .task-item.done .task-check {
+      background: var(--rust);
+      border-color: var(--rust);
+    }
+    .task-check svg { display: none; }
+    .task-item.done .task-check svg { display: block; }
+
+    .task-num {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--ink-faint);
+      flex-shrink: 0;
+      margin-top: 4px;
+      min-width: 1.4rem;
+    }
+    .task-text {
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--ink);
+      flex: 1;
+    }
+    .task-del {
+      opacity: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--ink-faint);
+      font-size: 1rem;
+      padding: 2px 4px;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      font-family: var(--font-mono);
+      line-height: 1;
+    }
+    .task-item:hover .task-del { opacity: 1; }
+    .task-del:hover { color: var(--rust); }
+
+    /* ── All done ── */
+    .all-done {
+      text-align: center;
+      padding: 2rem 0 1rem;
+      font-style: italic;
+      color: var(--ink-faint);
+      font-size: 1.1rem;
+    }
+    .all-done span {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 0.5rem;
+      font-style: normal;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 0;
+      border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .empty-state-glyph {
+      font-size: 1.5rem;
+      color: var(--border);
+      margin-bottom: 1rem;
+    }
+    .empty-state p {
+      font-style: italic;
+      color: var(--ink-faint);
+      font-size: 1.05rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Setup panel ── */
+    .setup-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+    .setup-hint {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-faint);
+      margin-top: 0.6rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 1rem;
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      line-height: 1.7;
+      border: 1px solid var(--border);
+      background: var(--cream-dark);
+      color: var(--ink);
+      resize: vertical;
+    }
+    textarea:focus { outline: none; border-color: var(--rust); }
+    textarea::placeholder { color: var(--ink-faint); font-style: italic; }
+
+    /* ── Buttons ── */
+    .btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .btn {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0.6rem 1.4rem;
+      border: 1px solid var(--border);
+      background: var(--cream);
+      color: var(--ink-light);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { border-color: var(--ink-light); color: var(--ink); }
+    .btn-primary {
+      background: var(--rust);
+      border-color: var(--rust);
+      color: var(--cream);
+    }
+    .btn-primary:hover { background: #9a3a18; border-color: #9a3a18; color: var(--cream); }
+    .btn-ghost { color: var(--ink-faint); }
+
+    /* ── Setup message ── */
+    .setup-msg {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      margin-top: 0.75rem;
+      min-height: 1rem;
+    }
+
+    /* ── Extracted tasks review ── */
+    .extracted-section {
+      margin-top: 2.5rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+    .extracted-section-title {
+      font-size: 1.2rem;
+      font-style: italic;
+      font-weight: 300;
+      color: var(--ink);
+      margin-bottom: 0.3rem;
+    }
+    .extracted-section-hint {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      color: var(--ink-faint);
+      margin-bottom: 1.25rem;
+    }
+    .ext-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .ext-item:first-child { border-top: 1px solid var(--border-light); }
+    .ext-cb {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      margin-top: 4px;
+      cursor: pointer;
+      accent-color: var(--rust);
+    }
+    .ext-ta {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--ink);
+      resize: none;
+      min-height: unset;
+      height: auto;
+      padding: 0;
+    }
+    .ext-ta:focus { outline: none; }
+    .ext-del {
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--ink-faint);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      padding: 0 4px;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .ext-del:hover { color: var(--rust); }
+
+    /* ── History ── */
+    .hist-item {
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .hist-item:first-child { border-top: 1px solid var(--border-light); }
+    .hist-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      gap: 1rem;
+    }
+    .hist-week {
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--ink);
+    }
+    .hist-count {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--ink-faint);
+      flex-shrink: 0;
+    }
+    .hist-count.complete { color: var(--rust); }
+    .hist-track {
+      height: 1px;
+      background: var(--border-light);
+      margin-bottom: 0.75rem;
+      position: relative;
+    }
+    .hist-fill {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      background: var(--rust);
+    }
+    .hist-del {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .hist-del:hover { color: var(--rust); }
+
+    /* ── Divider ornament ── */
+    .ornament {
+      text-align: center;
+      color: var(--rust);
+      font-size: 0.55rem;
+      letter-spacing: 0.4em;
+      margin: 2rem 0;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header class="header">
+    <div class="header-eyebrow">Julia Cameron</div>
+    <h1>The Artist's Way</h1>
+    <div class="header-sub">Weekly Task Tracker</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('checklist')">This Week</button>
+    <button class="tab" onclick="switchTab('setup')">Add Tasks</button>
+    <button class="tab" onclick="switchTab('history')">History</button>
+  </div>
+
+  <!-- CHECKLIST -->
+  <div id="panel-checklist" class="panel active">
+    <div class="week-nav">
+      <button class="week-nav-btn" onclick="changeWeek(-1)">← Prev</button>
+      <div class="week-meta">
+        <div class="week-title" id="week-title"></div>
+        <div class="week-range" id="week-range"></div>
+      </div>
+      <button class="week-nav-btn" onclick="changeWeek(1)">Next →</button>
+    </div>
+    <div id="checklist-body"></div>
+  </div>
+
+  <!-- SETUP -->
+  <div id="panel-setup" class="panel">
+    <label class="setup-label">Paste from the book</label>
+    <textarea id="task-input" placeholder="Paste exercises directly from the book — numbered items, paragraphs, or any mix. Each numbered exercise becomes one full task with all its context."></textarea>
+    <div class="setup-hint">Numbered exercises (1. 2. 3.) are kept whole. Plain paragraphs become one task each.</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="extractTasks()">Extract Tasks</button>
+      <button class="btn btn-ghost" onclick="clearSetup()">Clear</button>
+    </div>
+    <div class="setup-msg" id="setup-msg"></div>
+
+    <div id="extracted-section" class="extracted-section" style="display:none">
+      <div class="extracted-section-title">Review extracted tasks</div>
+      <div class="extracted-section-hint">Uncheck to skip. Click text to edit. × to remove.</div>
+      <div id="extracted-list"></div>
+      <div class="ornament">✦ ✦ ✦</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveExtracted()">Save Checked Tasks</button>
+        <button class="btn btn-ghost" onclick="cancelExtracted()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="panel-history" class="panel">
+    <div id="history-body"></div>
+  </div>
+
+</div>
+
+<script>
+  const SK = 'aw_tracker_v2';
+  function load() { try { return JSON.parse(localStorage.getItem(SK)) || {}; } catch { return {}; } }
+  function save(d) { localStorage.setItem(SK, JSON.stringify(d)); }
+  function getMonday(d) {
+    const dt = new Date(d);
+    const day = dt.getDay();
+    const diff = dt.getDate() - day + (day === 0 ? -6 : 1);
+    dt.setDate(diff); dt.setHours(0, 0, 0, 0); return dt;
+  }
+  function weekKey(m) { return m.toISOString().slice(0, 10); }
+  function weekLabel(m) {
+    const f = new Date(m); f.setDate(m.getDate() + 4);
+    const o = { month: 'long', day: 'numeric' };
+    return m.toLocaleDateString('en-US', o) + ' – ' + f.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  let curMonday = getMonday(new Date());
+  let viewMonday = new Date(curMonday);
+  let pendingTasks = [];
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', ['checklist', 'setup', 'history'][i] === name);
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    if (name === 'checklist') renderChecklist();
+    if (name === 'history') renderHistory();
+  }
+
+  function changeWeek(dir) {
+    viewMonday = new Date(viewMonday);
+    viewMonday.setDate(viewMonday.getDate() + dir * 7);
+    renderChecklist();
+  }
+
+  function renderChecklist() {
+    const key = weekKey(viewMonday);
+    const data = load();
+    const w = data[key] || { tasks: [], checked: [] };
+    document.getElementById('week-title').textContent = 'Week of ' + viewMonday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    document.getElementById('week-range').textContent = weekLabel(viewMonday) + ' · Mon – Fri';
+    const body = document.getElementById('checklist-body');
+    const tasks = w.tasks || [];
+    const checked = w.checked || [];
+    if (!tasks.length) {
+      body.innerHTML = `<div class="empty-state">
+        <div class="empty-state-glyph">✦</div>
+        <p>No tasks for this week yet.</p>
+        <button class="btn btn-primary" onclick="switchTab('setup')">Add Tasks</button>
+      </div>`;
+      return;
+    }
+    const done = checked.filter(Boolean).length;
+    const total = tasks.length;
+    const pct = Math.round((done / total) * 100);
+    let html = `<div class="stats-row">
+      <div class="stat-card"><div class="stat-label">Total</div><div class="stat-val">${total}</div></div>
+      <div class="stat-card"><div class="stat-label">Done</div><div class="stat-val">${done}</div></div>
+      <div class="stat-card"><div class="stat-label">Progress</div><div class="stat-val">${pct}%</div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Progress</span><span>${done} of ${total}</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="task-list">`;
+    tasks.forEach((t, i) => {
+      const isDone = checked[i] === true;
+      html += `<div class="task-item${isDone ? ' done' : ''}">
+        <div class="task-check" onclick="toggleTask('${key}',${i})" role="checkbox" aria-checked="${isDone}" tabindex="0">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#f5f0e8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="task-num">${String(i + 1).padStart(2, '0')}</div>
+        <div class="task-text">${esc(t)}</div>
+        <button class="task-del" onclick="deleteTask('${key}',${i})" title="Delete">×</button>
+      </div>`;
+    });
+    html += '</div>';
+    if (done === total && total > 0) {
+      html += `<div class="all-done"><span>✦ Complete ✦</span>All tasks finished — well done.</div>`;
+    }
+    body.innerHTML = html;
+    body.querySelectorAll('.task-check').forEach(el => {
+      el.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); el.click(); } });
+    });
+  }
+
+  function toggleTask(key, i) {
+    const data = load(); if (!data[key]) return;
+    const c = data[key].checked || []; c[i] = !c[i];
+    data[key].checked = c; save(data); renderChecklist();
+  }
+
+  function deleteTask(key, i) {
+    const data = load(); if (!data[key]) return;
+    data[key].tasks.splice(i, 1); data[key].checked.splice(i, 1);
+    save(data); renderChecklist();
+  }
+
+  function extractTasks() {
+    const raw = document.getElementById('task-input').value.trim();
+    if (!raw) { setMsg('Paste some text first.', 'var(--rust)'); return; }
+    const normalized = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const numberedRe = /^\d+\.\s+/;
+    const lines = normalized.split('\n');
+    const chunks = [];
+    let current = null;
+    for (let i = 0; i < lines.length; i++) {
+      const stripped = lines[i].trim();
+      if (!stripped) continue;
+      if (numberedRe.test(stripped)) {
+        if (current !== null) chunks.push(current.trim());
+        current = stripped;
+      } else {
+        if (current !== null) { current += ' ' + stripped; }
+        else { current = stripped; }
+      }
+    }
+    if (current !== null && current.trim()) chunks.push(current.trim());
+    if (chunks.length === 0) {
+      const paras = normalized.split(/\n{2,}/).map(p => p.replace(/\n/g, ' ').trim()).filter(p => p.length > 5);
+      paras.forEach(p => chunks.push(p));
+    }
+    if (chunks.length === 0) { setMsg('No tasks found — try pasting numbered exercises or paragraphs.', 'var(--rust)'); return; }
+    pendingTasks = chunks.map(t => ({ text: t, checked: true }));
+    setMsg('', '');
+    renderExtracted();
+    document.getElementById('extracted-section').style.display = 'block';
+  }
+
+  function renderExtracted() {
+    const list = document.getElementById('extracted-list');
+    list.innerHTML = '';
+    pendingTasks.forEach((task, i) => {
+      const row = document.createElement('div');
+      row.className = 'ext-item';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.className = 'ext-cb'; cb.checked = task.checked;
+      cb.addEventListener('change', () => { pendingTasks[i].checked = cb.checked; });
+      const ta = document.createElement('textarea');
+      ta.className = 'ext-ta'; ta.value = task.text; ta.rows = 1;
+      ta.addEventListener('input', () => { pendingTasks[i].text = ta.value; autoResize(ta); });
+      const del = document.createElement('button');
+      del.className = 'ext-del'; del.textContent = '×'; del.setAttribute('aria-label', 'Remove');
+      del.addEventListener('click', () => { pendingTasks.splice(i, 1); renderExtracted(); });
+      row.appendChild(cb); row.appendChild(ta); row.appendChild(del);
+      list.appendChild(row);
+      setTimeout(() => autoResize(ta), 0);
+    });
+  }
+
+  function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+
+  function saveExtracted() {
+    const tasks = pendingTasks.filter(t => t.checked && t.text.trim()).map(t => t.text.trim());
+    if (!tasks.length) { setMsg('No tasks checked.', 'var(--rust)'); return; }
+    const key = weekKey(curMonday);
+    const data = load();
+    const existing = data[key] || { tasks: [], checked: [] };
+    existing.tasks = [...existing.tasks, ...tasks];
+    existing.checked = [...existing.checked, ...new Array(tasks.length).fill(false)];
+    data[key] = existing; save(data);
+    pendingTasks = [];
+    document.getElementById('extracted-section').style.display = 'none';
+    document.getElementById('task-input').value = '';
+    setMsg('Saved ' + tasks.length + ' task' + (tasks.length !== 1 ? 's' : '') + '.', 'var(--rust)');
+    setTimeout(() => { viewMonday = new Date(curMonday); switchTab('checklist'); }, 700);
+  }
+
+  function cancelExtracted() {
+    pendingTasks = [];
+    document.getElementById('extracted-section').style.display = 'none';
+  }
+
+  function clearSetup() {
+    document.getElementById('task-input').value = '';
+    document.getElementById('setup-msg').textContent = '';
+    pendingTasks = [];
+    document.getElementById('extracted-section').style.display = 'none';
+  }
+
+  function setMsg(txt, color) {
+    const el = document.getElementById('setup-msg');
+    el.textContent = txt; el.style.color = color;
+  }
+
+  function renderHistory() {
+    const data = load();
+    const keys = Object.keys(data).sort().reverse();
+    const body = document.getElementById('history-body');
+    if (!keys.length) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-state-glyph">✦</div><p>No weeks saved yet.</p></div>`;
+      return;
+    }
+    let html = '';
+    keys.forEach(k => {
+      const w = data[k]; const tasks = w.tasks || [];
+      const done = (w.checked || []).filter(Boolean).length;
+      const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+      const mon = new Date(k + 'T12:00:00');
+      html += `<div class="hist-item">
+        <div class="hist-head">
+          <div class="hist-week">${weekLabel(mon)}</div>
+          <span class="hist-count${pct === 100 ? ' complete' : ''}">${done}/${tasks.length}${pct === 100 ? ' ✦' : ''}</span>
+        </div>
+        <div class="hist-track"><div class="hist-fill" style="width:${pct}%"></div></div>
+        <button class="hist-del" onclick="deleteWeek('${k}')">Delete week</button>
+      </div>`;
+    });
+    body.innerHTML = html;
+  }
+
+  function deleteWeek(key) { const data = load(); delete data[key]; save(data); renderHistory(); }
+
+  renderChecklist();
+</script>
+</body>
+</html>
