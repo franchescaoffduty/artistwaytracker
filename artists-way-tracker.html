@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Artist's Way — Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --cream:#f5f0e8;--cream-dark:#ede6d6;--ink:#1a1612;--ink-light:#4a3f35;
+      --ink-faint:#9a8e82;--rust:#b5461e;--rust-light:#f0d4c8;--border:#d4c9b8;
+      --border-light:#e8e0d2;
+      --font-serif:'Cormorant Garamond',Georgia,serif;--font-mono:'DM Mono',monospace;
+    }
+    html{font-size:16px}
+    body{background:var(--cream);color:var(--ink);font-family:var(--font-serif);min-height:100vh}
+    .page{max-width:740px;margin:0 auto;padding:2.5rem 1.75rem 6rem}
+    .hdr{text-align:center;margin-bottom:2rem;padding-bottom:1.75rem;border-bottom:1px solid var(--border);position:relative}
+    .hdr::after{content:'✦';position:absolute;bottom:-.65rem;left:50%;transform:translateX(-50%);background:var(--cream);padding:0 .75rem;font-size:.65rem;color:var(--rust)}
+    .hdr-eye{font-family:var(--font-mono);font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:var(--rust);margin-bottom:.5rem}
+    .hdr h1{font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink)}
+    .hdr-sub{font-family:var(--font-mono);font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin-top:.4rem}
+    .prog-wrap{margin-bottom:1.75rem}
+    .prog-lbl{font-family:var(--font-mono);font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-faint);display:flex;justify-content:space-between;margin-bottom:.35rem}
+    .prog-track{height:2px;background:var(--border)}
+    .prog-fill{height:100%;background:var(--rust);transition:width .4s}
+    .prog-dots{display:flex;justify-content:space-between;margin-top:.4rem}
+    .prog-dot{width:8px;height:8px;border-radius:50%;background:var(--border);cursor:pointer;transition:background .2s;position:relative}
+    .prog-dot.done{background:var(--rust)}.prog-dot.current{background:var(--ink)}
+    .prog-dot:hover::after{content:attr(data-tip);position:absolute;bottom:130%;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--cream);font-family:var(--font-mono);font-size:.5rem;padding:3px 7px;white-space:nowrap;z-index:10;pointer-events:none}
+    .wk-switch{display:flex;align-items:center;gap:.6rem;padding:.7rem 1rem;background:var(--cream-dark);border:1px solid var(--border);margin-bottom:1.5rem;flex-wrap:wrap}
+    .wk-switch label{font-family:var(--font-mono);font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+    .wk-switch select,.wk-switch input[type=date]{font-family:var(--font-mono);font-size:.62rem;border:1px solid var(--border);background:var(--cream);color:var(--ink);padding:.3rem .55rem;cursor:pointer}
+    .wk-switch select:focus,.wk-switch input[type=date]:focus{outline:none;border-color:var(--rust)}
+    .tabs{display:flex;margin-bottom:2rem;border-bottom:1px solid var(--border)}
+    .tab{font-family:var(--font-mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);background:none;border:none;padding:.65rem 1.1rem .65rem 0;cursor:pointer;border-bottom:1px solid transparent;margin-bottom:-1px;transition:color .2s}
+    .tab:hover{color:var(--ink)}.tab.active{color:var(--rust);border-bottom-color:var(--rust)}
+    .panel{display:none}.panel.active{display:block}
+    .wk-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+    .wk-nav-btn{font-family:var(--font-mono);font-size:.58rem;letter-spacing:.12em;color:var(--ink-faint);background:none;border:1px solid var(--border);padding:.3rem .8rem;cursor:pointer;transition:all .2s}
+    .wk-nav-btn:hover{border-color:var(--ink-light);color:var(--ink)}
+    .wk-meta{text-align:center}
+    .wk-badge{font-family:var(--font-mono);font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--rust);margin-bottom:.25rem}
+    .wk-title{font-size:1.2rem;font-style:italic;font-weight:400}
+    .wk-theme{font-family:var(--font-mono);font-size:.52rem;letter-spacing:.08em;color:var(--ink-faint);margin-top:.2rem}
+    .resched-bar{display:flex;align-items:center;gap:.65rem;padding:.55rem .9rem;background:var(--rust-light);border:1px solid var(--border);margin-bottom:1.25rem;flex-wrap:wrap}
+    .resched-bar span{font-family:var(--font-mono);font-size:.52rem;letter-spacing:.08em;color:var(--ink-light);flex:1}
+    .resched-bar input[type=date]{font-family:var(--font-mono);font-size:.58rem;border:1px solid var(--border);background:var(--cream);padding:.28rem .5rem;color:var(--ink);cursor:pointer}
+    .resched-bar input[type=date]:focus{outline:none;border-color:var(--rust)}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:1.5rem}
+    .stat{background:var(--cream);padding:.8rem 1rem;text-align:center}
+    .stat-lbl{font-family:var(--font-mono);font-size:.5rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:.25rem}
+    .stat-val{font-size:1.7rem;font-weight:300;color:var(--ink);line-height:1}
+    .pw-wrap{margin-bottom:1.5rem}
+    .pw-lbl{font-family:var(--font-mono);font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);display:flex;justify-content:space-between;margin-bottom:.35rem}
+    .pw-track{height:2px;background:var(--border)}.pw-fill{height:100%;background:var(--rust);transition:width .4s}
+    .day-sec{margin-bottom:1.5rem}
+    .day-hdr{display:flex;align-items:center;gap:.65rem;padding-bottom:.35rem;border-bottom:1px solid var(--border-light);margin-bottom:.25rem}
+    .day-name{font-family:var(--font-mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-light);min-width:72px}
+    .day-date{font-family:var(--font-mono);font-size:.5rem;color:var(--ink-faint)}
+    .day-pill{font-family:var(--font-mono);font-size:.46rem;letter-spacing:.1em;padding:2px 7px;margin-left:auto}
+    .day-pill.today{background:var(--ink);color:var(--cream)}.day-pill.past{color:var(--ink-faint);border:1px solid var(--border)}
+    .day-rest{font-family:var(--font-mono);font-size:.5rem;color:var(--ink-faint);padding:.45rem 0;letter-spacing:.08em}
+    .task-list{display:flex;flex-direction:column}
+    .task-item{display:flex;align-items:flex-start;gap:.8rem;padding:.65rem 0;border-bottom:1px solid var(--border-light)}
+    .task-item:last-child{border-bottom:none}
+    .task-item.done{opacity:.4}.task-item.done .task-text{text-decoration:line-through}
+    .task-item.reading .task-text::before{content:'📖 '}
+    .task-chk{width:16px;height:16px;border:1px solid var(--border);flex-shrink:0;margin-top:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;background:var(--cream)}
+    .task-chk:hover{border-color:var(--rust)}.task-item.done .task-chk{background:var(--rust);border-color:var(--rust)}
+    .task-chk svg{display:none}.task-item.done .task-chk svg{display:block}
+    .task-num{font-family:var(--font-mono);font-size:.5rem;color:var(--ink-faint);flex-shrink:0;margin-top:4px;min-width:1.2rem}
+    .task-text{font-size:.9rem;line-height:1.65;color:var(--ink);flex:1}
+    .task-del{opacity:0;border:none;background:none;cursor:pointer;color:var(--ink-faint);font-family:var(--font-mono);font-size:.85rem;padding:2px 4px;flex-shrink:0;transition:all .15s}
+    .task-item:hover .task-del{opacity:1}.task-del:hover{color:var(--rust)}
+    .all-done{text-align:center;padding:1.5rem 0;font-style:italic;color:var(--ink-faint);font-size:1rem}
+    .all-done span{display:block;font-family:var(--font-mono);font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--rust);margin-bottom:.35rem;font-style:normal}
+    .empty{text-align:center;padding:3rem 0;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light)}
+    .empty-glyph{font-size:1.1rem;color:var(--border);margin-bottom:.75rem}
+    .empty p{font-style:italic;color:var(--ink-faint);font-size:.92rem;margin-bottom:1rem}
+    .setup-sec{margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid var(--border)}
+    .setup-sec:last-child{border-bottom:none}
+    .setup-title{font-size:1.1rem;font-style:italic;margin-bottom:.25rem}
+    .setup-hint{font-family:var(--font-mono);font-size:.53rem;letter-spacing:.07em;color:var(--ink-faint);margin-bottom:.85rem;line-height:1.7}
+    textarea{width:100%;min-height:150px;padding:1rem;font-family:var(--font-serif);font-size:.9rem;line-height:1.7;border:1px solid var(--border);background:var(--cream-dark);color:var(--ink);resize:vertical}
+    textarea:focus{outline:none;border-color:var(--rust)}
+    textarea::placeholder{color:var(--ink-faint);font-style:italic}
+    select.wk-sel{font-family:var(--font-mono);font-size:.6rem;border:1px solid var(--border);background:var(--cream);color:var(--ink);padding:.32rem .6rem;cursor:pointer;margin-bottom:.7rem;display:block}
+    select.wk-sel:focus{outline:none;border-color:var(--rust)}
+    input[type=date]{font-family:var(--font-mono);font-size:.6rem;border:1px solid var(--border);background:var(--cream-dark);padding:.38rem .6rem;color:var(--ink);width:100%;margin-bottom:.7rem;display:block}
+    input[type=date]:focus{outline:none;border-color:var(--rust)}
+    .btn-row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem}
+    .btn{font-family:var(--font-mono);font-size:.53rem;letter-spacing:.18em;text-transform:uppercase;padding:.48rem 1.05rem;border:1px solid var(--border);background:var(--cream);color:var(--ink-light);cursor:pointer;transition:all .2s}
+    .btn:hover{border-color:var(--ink-light);color:var(--ink)}
+    .btn-p{background:var(--rust);border-color:var(--rust);color:var(--cream)}.btn-p:hover{background:#9a3a18;border-color:#9a3a18;color:var(--cream)}
+    .btn-g{color:var(--ink-faint)}
+    .msg{font-family:var(--font-mono);font-size:.53rem;letter-spacing:.07em;margin-top:.45rem;min-height:.9rem}
+    .ext-sec{margin-top:1.75rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+    .ext-title{font-size:1rem;font-style:italic;margin-bottom:.2rem}
+    .ext-hint{font-family:var(--font-mono);font-size:.5rem;letter-spacing:.07em;color:var(--ink-faint);margin-bottom:.8rem}
+    .ext-item{display:flex;align-items:flex-start;gap:.6rem;padding:.55rem 0;border-bottom:1px solid var(--border-light)}
+    .ext-item:first-child{border-top:1px solid var(--border-light)}
+    .ext-cb{width:14px;height:14px;flex-shrink:0;margin-top:3px;cursor:pointer;accent-color:var(--rust)}
+    .ext-ta{flex:1;border:none;background:transparent;font-family:var(--font-serif);font-size:.9rem;line-height:1.6;color:var(--ink);resize:none;height:auto;padding:0}
+    .ext-ta:focus{outline:none}
+    .ext-del{border:none;background:none;cursor:pointer;color:var(--ink-faint);font-family:var(--font-mono);font-size:.82rem;padding:0 4px;flex-shrink:0;transition:color .15s}
+    .ext-del:hover{color:var(--rust)}
+    .hist-item{padding:1rem 0;border-bottom:1px solid var(--border-light)}
+    .hist-item:first-child{border-top:1px solid var(--border-light)}
+    .hist-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.5rem;gap:1rem}
+    .hist-wlbl{font-style:italic;font-size:.92rem}
+    .hist-wlbl span{font-family:var(--font-mono);font-size:.5rem;color:var(--rust);letter-spacing:.15em;text-transform:uppercase;margin-right:.4rem;font-style:normal}
+    .hist-cnt{font-family:var(--font-mono);font-size:.52rem;letter-spacing:.1em;color:var(--ink-faint);flex-shrink:0}
+    .hist-cnt.done{color:var(--rust)}
+    .hist-track{height:1px;background:var(--border-light);position:relative;margin-bottom:.5rem}
+    .hist-fill{position:absolute;top:0;left:0;height:100%;background:var(--rust)}
+    .hist-acts{display:flex;gap:1rem}
+    .hist-btn{font-family:var(--font-mono);font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);background:none;border:none;cursor:pointer;padding:0;transition:color .15s}
+    .hist-btn:hover{color:var(--rust)}
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(26,22,18,.5);z-index:100;align-items:center;justify-content:center}
+    .modal-bg.open{display:flex}
+    .modal{background:var(--cream);border:1px solid var(--border);padding:2rem;max-width:380px;width:90%}
+    .modal-title{font-size:1.1rem;font-style:italic;margin-bottom:.3rem}
+    .modal-hint{font-family:var(--font-mono);font-size:.52rem;color:var(--ink-faint);margin-bottom:1rem;line-height:1.65}
+    .ornament{text-align:center;color:var(--rust);font-size:.5rem;letter-spacing:.4em;margin:1.1rem 0}
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="hdr">
+    <div class="hdr-eye">Julia Cameron</div>
+    <h1>The Artist's Way</h1>
+    <div class="hdr-sub">12-Week Program Tracker</div>
+  </header>
+
+  <div class="prog-wrap" id="prog-wrap"></div>
+
+  <div class="wk-switch">
+    <label>I am on</label>
+    <select id="cur-wk-sel" onchange="setCurrentWeek(this.value)">
+      <option value="">select week</option>
+      <option value="1">Week 1 — Recovering a Sense of Safety</option>
+<option value="2">Week 2 — Recovering a Sense of Identity</option>
+<option value="3">Week 3 — Recovering a Sense of Power</option>
+<option value="4">Week 4 — Recovering a Sense of Integrity</option>
+<option value="5">Week 5 — Recovering a Sense of Possibility</option>
+<option value="6">Week 6 — Recovering a Sense of Abundance</option>
+<option value="7">Week 7 — Recovering a Sense of Connection</option>
+<option value="8">Week 8 — Recovering a Sense of Strength</option>
+<option value="9">Week 9 — Recovering a Sense of Compassion</option>
+<option value="10">Week 10 — Recovering a Sense of Self-Protection</option>
+<option value="11">Week 11 — Recovering a Sense of Autonomy</option>
+<option value="12">Week 12 — Recovering a Sense of Faith</option>
+    </select>
+    <label>and this week started</label>
+    <input type="date" id="cur-wk-date" onchange="setWeekStart()"/>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('today')">Today</button>
+    <button class="tab" onclick="switchTab('week')">This Week</button>
+    <button class="tab" onclick="switchTab('setup')">Setup</button>
+    <button class="tab" onclick="switchTab('history')">History</button>
+  </div>
+
+  <div id="panel-today" class="panel active"><div id="today-body"></div></div>
+
+  <div id="panel-week" class="panel">
+    <div class="wk-nav">
+      <button class="wk-nav-btn" onclick="changeWeek(-1)">← Prev</button>
+      <div class="wk-meta">
+        <div class="wk-badge" id="wk-badge"></div>
+        <div class="wk-title" id="wk-title"></div>
+        <div class="wk-theme" id="wk-theme"></div>
+      </div>
+      <button class="wk-nav-btn" onclick="changeWeek(1)">Next →</button>
+    </div>
+    <div id="resched-bar" class="resched-bar" style="display:none">
+      <span>Reschedule this week to a different Monday</span>
+      <input type="date" id="resched-date"/>
+      <button class="btn btn-p" onclick="rescheduleWeek()">Apply</button>
+    </div>
+    <div id="week-body"></div>
+  </div>
+
+  <div id="panel-setup" class="panel"><div id="setup-body"></div></div>
+  <div id="panel-history" class="panel"><div id="history-body"></div></div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-title">Reschedule week</div>
+    <div class="modal-hint">Choose a new Monday to start this week's tasks.</div>
+    <input type="date" id="modal-date"/>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="confirmReschedule()">Confirm</button>
+      <button class="btn btn-g" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKBOOK = {"1": {"theme": "Recovering a Sense of Safety", "tasks": ["Set your alarm to wake up a half-hour earlier than usual every morning; get up and do three pages of longhand, stream-of-consciousness morning writing. Do not reread these pages or allow anyone else to read them. Ideally, stick them in a large manila envelope, or hide them somewhere. Welcome to the morning pages. They will change you. List below a few creative affirmations from Week One that have particular significance for you. Also below, copy any \u201cblurts\u201d from your morning pages \u2014those negative statements about yourself and your life that tend to crop up in each day\u2019s morning pages. Convert these blurts into positive affirmations.An affirmation is a strong, positive statement that something is already so. SHAKTI GAWAIN", "Take yourself on an artist\u2019s date. You will do this every week for the duration of the course. A sample artist\u2019s date: Take five dollars and go to your local dollar store. Buy silly things like gold stick-on stars, tiny dinosaurs, some postcards, sparkly sequins, glue, kid\u2019s scissors, crayons. You might give yourself a gold star on your envelope each day you write. Just for fun. Record your experiences below. Go confidently in the direction of your dreams! Live the life you\u2019ve imagined. As you simplify your life, the laws of the universe will be simple. HENRY DAVID THOREAU", "Time Travel: Describe below three old enemies of your creative self-worth. Please be as specific as possible in doing this exercise. Your historic monsters are the building blocks of your core negative beliefs. (Yes, rotten Sister Ann Rita from fifth grade does count, and the rotten thing she said to you does matter. Put her in.) This is your monster hall of fame. More monsters will come to you as you work through your recovery. It is always necessary to acknowledge creative injuries and grieve them. Otherwise, they become creative scar tissue and block your growth. Make your own recovery the first priority in your life. ROBIN NORWOOD", "Time Travel: Select and write out one horror story from your monster hall of fame. You do not need to write long or much, but do jot down whatever details come back to you\u2014the room you were in, the way people looked at you, the way you felt, what people said or didn\u2019t say when you told about it. Include whatever rankles you about the incident: \u201cAnd then I remember she gave me this real fakey smile and patted my head. . . .\u201d You may find it cathartic to draw a sketch of your old monster or to clip out an image that evokes the incident for you. Draw a cartoon trashing your monster, or at least draw a nice red X through it.", "Below, write a letter to the editor in your defense. Write this letter in the voice of your wounded artist child: \u201cTo whom it may concern: Sister Ann Rita is a jerk and has pig eyes and I can too spell!\u201d For added fun, copy this letter onto nice stationery and mail it to yourself.", "Time Travel: Below, list three old champions of your creative self-worth. This is your hall of champions, those who wish you and your creativity well. Also record (be specific) encouraging words they\u2019ve said to you. Even if you disbelieve a compliment, record it. It may well be true. If you are stuck for compliments, go back through your time-travel log and look for positive memories. When, where, and why did you feel good about yourself ? Who gave you affirmation? Additionally, you may wish to write the compliment out and decorate it. Post it near where you do your morning pages or on the dashboard of your car. I put mine on the chassis of my computer to cheer me as I write. Every time we say Let there be! in any form, something happens. STELLA TERRILL MANN", "Time Travel: Select and write out one happy piece of encouragement below. Describe why this vote of confidence meant so much to you. Once you are done, write a thank-you letter to the person who gave you this encouragement \u2014even if it was you. Mail it to yourself or to the long-lost mentor.", "Imaginary Lives: If you had five other lives to lead, what would you do in each of them? I would be a pilot, a cowhand, a physicist, a psychic, a monk. You might be a scuba diver, a cop, a writer of children\u2019s books, a football player, a belly dancer, a painter, a performance artist, a history teacher, a healer, a coach, a scientist, a doctor, a Peace Corps worker, a psychologist, a fisherman, a minister, an auto mechanic, a carpenter, a sculptor, a lawyer, a painter, a computer hacker, a soap-opera star, a country singer, a rock-and- roll drummer. Whatever occurs to you, jot it down. Do not overthink this exercise. The point of these lives is to have fun in them\u2014more fun than you might be having in this one. Look over your list and select one. Then do it this week. For instance, if you put down \u201ccountry singer,\u201d can you pick up a guitar? If you dream of being a cowhand, what about some horseback riding? Jot down some notes below on how this felt.", "In working with affirmations and blurts, very often injuries and monsters swim back to us. Write about them below as they occur to you. Next, work with each blurt individually. Turn each negative into an affirmative positive. Undoubtedly, we become what we envisage. CLAUDE M. BRISTOL", "Take your artist for a walk, just the two of you. A brisk twenty-minute walk can dramatically alter consciousness. Below, record reflections you made on this walk. You will do check-ins every week. If you are running your creative week Sunday to Sunday, do your check-ins each Saturday. Remember that this recovery is yours. What you think is important, and it will become increasingly interesting to you as you progress. It\u2019s best to answer by hand and allow about twenty minutes to respond. The purpose of check-ins is to give you a journal of your creative journey. It is my hope that you will later share the tools with others and in doing so find your own notes invaluable: \u201cYes, I was mad in Week Four. I loved Week Five. . . .\u201d", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0], "readingIdx": 0, "checked": [false, false, false, false, false, false, false, false, false, false, false]}, "2": {"theme": "Recovering a Sense of Identity", "tasks": ["Affirmative Reading: Every day, morning and night, get quiet and focused and read the Basic Principles to yourself. (See page xi.) Record any attitudinal shifts. Can you see yourself setting aside any skepticism yet?", "Where does your time go? List your five major activities this week. How much time did you give to each one? Which were what you wanted to do and which were shoulds? How much of your time is spent helping others and ignoring your own desires? Have any of your blocked friends triggered doubts in you? Draw a circle below. Inside this circle, place topics you need to protect. Place the names of those you find to be supportive. Outside the circle, place the names of those you must be self-protective around just now. Use this map to support your autonomy. Add names to the inner and outer spheres as appropriate: \u201cOh! Derek is somebody I shouldn\u2019t talk to about this right now.\u201d", "List twenty things you enjoy doing (rock climbing, roller-skating, baking pies, making soup, making love, making love again, riding a bike, riding a horse, playing catch, shooting baskets, going for a run, reading poetry, and so forth). When was the last time you let yourself do these things? Next to each entry, place a date. Don\u2019t be surprised if it\u2019s been years for some of your favorites. That will change. This list is an excellent resource for artist\u2019s dates.", "From the preceding list, write down two favorite things that you\u2019ve avoided that could be this week\u2019s goals. These goals can be small: buy one roll of film and shoot it. Remember, we are trying to win you some autonomy with your time. Look for windows of time just for you, and use them in small creative acts. Get to the record store at lunch hour, even if only for fifteen minutes. Stop looking for big blocks of time when you will be free. Find small bits of time instead. Record below what you did and how you managed to fit it into your schedule. Dip back into Week One and read the affirmations. Note which ones cause the most reaction. Often the one that sounds the most ridiculous is the most significant. Write three chosen affirmations five times each day after your morning pages; be sure to include the affirmations you made yourself from your blurts.", "Return to the list of imaginary lives from last week. List five more lives below. Now write down plans for doing bits and pieces of these lives in the one you are living now. If you have listed a dancer\u2019s life, do you let yourself go dancing? If you have listed a monk\u2019s life, are you ever allowed to go on a retreat? If you are a scuba diver, is there an aquarium shop you can visit? A day at the lake you could schedule?", "Life Pie: Draw a circle below. Divide it into six pieces of pie. Label one piece \u201cspirituality,\u201d another \u201cexercise,\u201d another \u201cplay,\u201d and so on with \u201cwork,\u201d \u201cfriends,\u201d and \u201cromance/adventure.\u201d Place a dot in each slice at the degree to which you are fulfilled in that area (outer rim indicates great; inner circle, not so great). Connect the dots. This will show you where you are lopsided. As you begin the course, it is not uncommon for your life pie to look like a tarantula. As recovery progresses, your tarantula may become a mandala. Working with this tool, you will notice that there are areas of your life that feel impoverished and on which you spend little or no time. Use the time tidbits you are finding to alter this. If your spiritual life is minimal, even a five-minute pit stop into a synagogue or cathedral can restore a sense of wonder. Many of us find that five minutes of drum music can put us in touch with our spiritual core. For others, it\u2019s a trip to a greenhouse. The point is that even the slightest attention to our impoverished areas can nurture them. List three ways to make your circle less lopsided. I shut my eyes in order to see. PAUL GAUGUIN", "Ten Tiny Changes: List ten changes you\u2019d like to make for yourself, from the significant to the small or vice versa (\u201cget new sheets so I have another set, go to China, paint my kitchen, dump my bitchy friend Alice\u201d). Do it this way: As the morning pages nudge us increasingly into the present, where we pay attention to our current lives, a small shift like a newly painted kitchen can yield a luxuriously large sense of self-care.", "Select one small item from the list of ten changes and make it a goal for this week. At week\u2019s end, describe your results below.", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4, 0, 1, 2, 3], "readingIdx": 0, "checked": [false, false, false, false, false, false, false, false, false]}, "3": {"theme": "Recovering a Sense of Power", "tasks": ["Describe your childhood bedroom. If you wish, you may sketch this room. What was your favorite thing about it? What\u2019s your favorite thing about your bedroom right now? Nothing? Well, get something you like in there\u2014maybe something from that old childhood bedroom.There is a vitality, a life force, an energy, a quickening, that is translated through you into action, and because there is only one of you in all time, this expression is unique. And if you block it, it will never exist through any other medium and will be lost. MARTHA GRAHAM", "Describe five traits you liked in yourself as a child. Next, write a little bit about why each one appeals to you. Whenever I have to choose between two evils, I always like to try the one I haven\u2019t tried before. MAE WEST", "List five childhood accomplishments (got straight A\u2019s in seventh grade, trained the dog, punched out the class bully, short-sheeted the priest\u2019s bed). Reflect below on your memories of those experiences of success. And a treat: List five favorite childhood foods. Buy yourself one of them this week. Yes, Jell-O with bananas is okay.", "Habits: Take a look at your habits. Many of them may interfere with your self-nurturing and cause shame. Some of the oddest things are self- destructive. Do you have a habit of watching TV you don\u2019t like? Do you have a habit of hanging out with a really boring friend and just killing time (there\u2019s an expression!)? Some rotten habits are obvious, overt (drinking too much, smoking, eating instead of writing). List three obvious rotten habits. What\u2019s the payoff in continuing them? Some rotten habits are more subtle (no time to exercise, little time to pray, always helping others, not getting any self-nurturing, hanging out with people who belittle your dreams). List three of your subtle foes. What use do these forms of sabotage have? Be specific.", "Make a list of friends who nurture you\u2014that\u2019s nurture (give you a sense of your own competency and possibility), not enable (give you the message that you will never get it straight without their help). There is a big difference between being helped and being treated as though we are helpless. Describe which of these friends\u2019 traits, particularly, serve you well.", "Call a friend who treats you like a really good and bright person who can accomplish things. Part of your recovery is reaching out for support. This support will be critical as you undertake new risks.", "Inner Compass: Each of us has an inner compass. This is an instinct that points us toward health. It warns us when we are on dangerous ground, and it tells us when something is safe and good for us. Morning pages are one way to contact it. So are some other artist-brain activities\u2014painting, driving, walking, scrubbing, running. This week, take an hour to follow your inner compass by doing an artist-brain activity and listening to what insights bubble up. Record them below. Creative work is play. It is free speculation using the materials of one\u2019s chosen form. STEPHEN NACHMANOVITCH", "List five people you admire whom you would feel safe praising publicly. Now list five people you secretly admire. What traits do these people have that you can cultivate further in yourself ? Creativity is . . . seeing something that doesn\u2019t exist already. You need to find out how you can bring it into being and that way be a playmate with God. MICHELE SHEA", "List five people who are dead whom you wish you had met while they were alive. Now list five people who are dead whom you\u2019d like to hang out with for a while in eternity. What traits do you find in these people that you can look for in your friends?", "Compare the two sets of lists. Take a look at what you really like and really admire\u2014and a look at what you think you should like and admire. Your shoulds might tell you to admire Edison, while your heart belongs to Houdini. Go with the Houdini side of you for a while.", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0], "readingIdx": 0, "checked": [false, false, false, false, false, false, false, false, false, false, false]}, "4": {"theme": "Recovering a Sense of Integrity", "tasks": ["Environment: Describe your ideal environment. Town? Country? Swanky? Cozy? One paragraph. One image, drawn or clipped, that conveys this. What\u2019s your favorite season? Why? Go through some magazines and find an image of this. Or draw it. Place it near your working area.When the soul wishes to experience something she throws an image of the experience out before her and enters into her own image. MEISTER ECKHART", "Time Travel: Describe yourself at eighty. What did you do after fifty that you enjoyed? Be very specific. Now write a letter from you at eighty to you at your current age. What would you tell yourself? What interests would you urge yourself to pursue? What dreams would you encourage?", "Time Travel: Remember yourself at eight. What did you like to do? What were your favorite things? Now write a letter from you at eight to you at your current age. What would you tell yourself?", "Environment: Look at your house. Is there any room that you could make into a secret, private space for yourself? Convert the TV room? Buy a screen or hang a sheet and cordon off a section of some other room? This is your dream area. It should be decorated for fun and not as an office. All you really need is a chair or pillow, something to write on, some kind of little altar area for flowers and candles. This is to help you center on the fact that creativity is a spiritual, not an ego, issue. Describe your new private space below.", "Use your life pie (from Week Two) to review your growth. Has that nasty tarantula changed shape yet? Haven\u2019t you been more active, less rigid, more expressive? Be careful not to expect too much too soon. That\u2019s \u201craising the jumps.\u201d Growth must have time to solidify into health. One day at a time, you are building the habit patterns of a healthy artist. Easy does do it. List below ongoing self-nurturing toys you could buy your artist: books on tape, magazine subscriptions, theater tickets, a bowling ball.", "Write your own artist\u2019s prayer. (See pages 207-208 of The Artist\u2019s Way.) Use it every day for a week. I learned that the real creator was my inner Self, the Shakti. . . . That desire to do something is God inside talking through us. MICHELE SHEA", "An extended artist\u2019s date: Plan a small vacation for yourself. (One weekend day. Get ready to execute it.) Below, describe what you did on this artist\u2019s date.", "Open your closet. Choose one low-self-worth outfit (you know the one) to hand down to a friend or donate to a charity. Make space for the new. Describe this outfit and how disposing of it made you feel.", "Look at one situation in your life that you feel you should change but haven\u2019t yet. What is the payoff for you in staying stuck?", "If you break your reading deprivation (see pages 87-89 of The Artist\u2019s Way), write about how you did it. In a tantrum? A slipup? A binge? How do you feel about it? Why?", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 0], "readingIdx": 9, "checked": [false, false, false, false, false, false, false, false, false, false, false]}, "5": {"theme": "Recovering a Sense of Possibility", "tasks": ["The reason I can\u2019t really believe in a supportive God is . . . List five grievances. (God can take it.)", "Starting an Image File: If I had either faith or money I would try . . . List five desires. For the next week, be alert for images of these desires. When you spot them, clip them, buy them, photograph them, draw them, collect them somehow. With these images, begin a file of dreams that speak to you. Add to it continually for the duration of the course. Paste a couple of especially powerful images here and describe their pull for you.", "One more time, list five imaginary lives. Have they changed? Are you doing more parts of them? You may want to add images of these lives to your image file.", "If I were twenty and had money . . . List five adventures. Again, add images of these to your visual image file.", "If I were sixty-five and had money . . . List and describe five postponed pleasures. And again, collect these images. This is a very potent tool.", "Ten ways I am mean to myself are . . . Just as making the positive explicit helps allow it into our lives, making the negative explicit helps us exorcise it.", "Ten items I would like to own that I don\u2019t are . . . And again, you may want to collect these images. In order to boost sales, experts in sales motivation often teach rookie salespeople to post images of what they would like to own. It works. To accept the responsibility of being a child of God is to accept the best that life has to offer you. STELLA TERRILL MANN", "Honestly, my favorite creative block is . . . TV, overreading, friends, work, rescuing others, overexercise. You name it. Whether you can draw or not, please cartoon yourself indulging in it.", "My payoff for staying blocked is . . . This you may want to explore in your morning pages.", "The person I blame for being blocked is . . . Again, use your pages to mull over this.", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0], "readingIdx": 0, "checked": [false, false, false, false, false, false, false, false, false, false, false]}, "6": {"theme": "Recovering a Sense of Abundance", "tasks": ["Natural Abundance: Pick five flowers or leaves. You may want to press these between wax paper and save them in this book. If you did this in kindergarten, that\u2019s fine. Some of the best creative play is done there. Let yourself do it again and record below how this whimsical activity influenced your thinking on the creative process.Natural Abundance: Find five pretty or interesting rocks. I enjoy this exercise particularly because rocks can be carried in pockets, fingered in business meetings. They can be small, constant reminders of our creative consciousness.", "Creation: Bake something. (If you have a sugar problem, make a fruit salad.) Creativity does not have to always involve capital-A art. Very often, the act of cooking something can help you cook something up in another creative mode. (When I am stymied as a writer, I make soups and pies.) Reflect below on how this simple creative act of cooking influenced your relationship to larger art projects you are working on. Clearing: Throw out or give away five ratty pieces of clothing.", "Reread the Basic Principles. (See page xi.) Do this once daily. Read an artist\u2019s prayer\u2014yours from Week Four, or mine on pages 207-208 of The Artist\u2019s Way. Do this once daily. Copy below the sentences from these pages that feel particularly relevant to you. Communication: Send postcards to five friends. This is not a goody-two- shoes exercise. Send them to people you would love to hear from.", "Clearing: Map out below a few changes in your home environment that would give you more physical and emotional space. Make them.", "Acceptance: Any new flow in your life? Below, practice saying yes to freebies.", "Prosperity: Any changes in your financial situation or your perspective on it? Any new\u2014even crazy\u2014ideas about what you would love doing? Pull images around this and add to your image file. Paste a few of them here.", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4, 0, 1], "readingIdx": 0, "checked": [false, false, false, false, false, false, false]}, "7": {"theme": "Recovering a Sense of Connection", "tasks": ["Make this sentence a mantra: Treating myself like a precious object will make me strong. Watercolor or crayon or calligraph this sentence below. You may also wish to do so on a blank sheet and post it where you will see it daily. We tend to think being hard on ourselves will make us strong. But it is cherishing ourselves that gives us strength.Trust in yourself. Your perceptions are often far more accurate than you are willing to believe. CLAUDIA BLACK", "Give yourself time out to listen to one side of an album, just for joy. You may want to doodle in the space provided here as you listen, allowing yourself to draw the shapes, emotions, thoughts you hear in the music. Notice how just twenty minutes can refresh you. Learn to take these mini artist\u2019s dates to break stress and allow insight.", "Take yourself into a sacred space\u2014a church, synagogue, library, grove of trees\u2014and allow yourself to savor the silence and healing solitude. Each of us has a personal idea of what sacred space is. For me, a large clock store or a great aquarium store can engender a sense of timeless wonder. Experiment and record a few of your reflections on these activities below.", "Create one wonderful smell in your house\u2014with soup, incense, fir branches, candles\u2014whatever. Note below how this infuses your day in terms of creativity. Wear your favorite item of clothing for no special occasion.", "Collage: Collect a stack of at least ten magazines, which you will allow yourself to freely dismember. Setting a twenty-minute time limit for yourself, tear (literally) through the magazines, collecting any images that reflect your life or interests. Think of this collage as a form of pictorial autobiography. Include your past, present, future, and your dreams. It is okay to include images you simply like. Keep pulling until you have a good stack of images (at least twenty). Now take a sheet of newspaper, a stapler, or some tape or glue, and arrange your images in a way that pleases you. (This is one of my students\u2019 favorite exercises.) Describe your collage below. When you start a painting, it is somewhat outside you. At the conclusion, you seem to Buy yourself one wonderful pair of socks, one wonderful pair of gloves \u2014one wonderfully comforting, self-loving something.", "Quickly list five favorite films. Do you see any common denominators among them? Are they romances, adventures, period pieces, political dramas, family epics, thrillers? Do you see traces of your cinematic themes in your collage? When an inner situation is not made conscious, it appears outside as fate. C. G. JUNG", "Name your favorite topics to read about: comparative religion, movies, ESP, physics, rags-to-riches, betrayal, love triangles, scientific breakthroughs, sports . . . Are these topics in your collage? How do they appear in the collage? Give your collage a place of honor. Even a secret place of honor is all right\u2014in your closet, in a drawer, anywhere that is yours. You may want to do a new one every few months, or collage more thoroughly a dream you are trying to accomplish. Check-In", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues.", "3. Did you experience any synchronicity this week? What was it? 4. Were there any other issues this week that you consider significant for your recovery? Describe them."], "dayAssignments": [1, 2, 3, 4, 0, 1, 0, 2, 3], "readingIdx": 6, "checked": [false, false, false, false, false, false, false, false, false]}, "8": {"theme": "Recovering a Sense of Strength", "tasks": ["Goal Search: You may find the following exercise difficult. Allow yourself to do it anyway. If multiple dreams occur to you, do the exercise for each one of them. The simple act of imagining a dream in concrete detail helps us to bring it into reality. Think of your goal search as a preliminary architect\u2019s drawing for the life you would wish to have.Your desire is your prayer. Picture the fulfillment of your desire now and feel its reality The Steps 1. Name your dream. That\u2019s right. Write it down. \u201cIn a perfect world, I would secretly love to be a ____.\u201d 2. Name one concrete goal that signals to you its accomplishment. On your emotional compass, this goal signifies true north. (For example, two women may want to be actresses. They share that dream. For one, an article in People magazine is the concrete goal. To her, glamour is the emotional center for her dream; glamour is true north. For the second woman, the concrete goal is a good review in a Broadway play. To her, respect as a creative artist is the emotional center of her dream; respect is true north. Actress One might be happy as a soap star. Actress Two would need stage work to fulfill her dream. On the surface, both seem to desire the same thing.) 3. In a perfect world, where would you like to be in five years in relation to your dream and true north? 4. In the world we inhabit now, what action can you take, this year, to move you closer? Describe this action in detail below. 5. What action can you take this month? This week? This day? Right now? 6. List your dream (for example, to be a famous film director). List its true north (respect and higher consciousness, mass communication.) Select a role model (Walt Disney, Ron Howard, Michael Powell). Make an action plan. Five years. Three years. One year. One month. One week. Now. Choose an action. Reading this book is an action.", "New Childhood: What might you have been if you\u2019d had perfect nurturing? Write a page of this fantasy childhood. What were you given? Can you reparent yourself in that direction now?", "Color Schemes: Pick a color and write a quick few sentences describing yourself in the first person. (\u201cI am silver, high-tech and ethereal, the color of dreams and accomplishment, the color of half-light and in between. I feel serene.\u201d Or, \u201cI am red. I am passion, sunset, anger, blood, wine and roses, armies, murder, lust, and apples.\u201d) What is your favorite color? What do you have that is that color? What about an entire room? This is your life and your house.", "List five things you are not allowed to do: kill your boss, scream in church, go outside naked, make a scene, quit your job. Now do that thing on paper. Write it, draw it, paint it, act it out, collage it. Now put some music on and dance it.", "Style Search: List twenty things you like to do. (Perhaps the same twenty you listed before, perhaps not.) Answer these questions for each item. Does it cost money, or is it free? Expensive or cheap? Alone or with somebody? Job-related? Physical risk? Fast-paced or slow? Mind, body, or spiritual?", "Ideal Day: Plan a perfect day in your life as it is now constituted, using the information gleaned from the previous exercises.", "Ideal Ideal Day: Plan a perfect day in your life as you wish it were constituted. There are no restrictions. Allow yourself to be and to have whatever your heart desires. Your ideal environment, job, home, circle of friends, intimate relationship, stature in your art form\u2014your wildest dreams. Choose one festive aspect from your Ideal day. Allow yourself to live it. You may not be able to move to Rome yet, but even in a still-grungy apartment you can enjoy a homemade cappuccino and a croissant.", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4, 0, 1, 2], "readingIdx": 0, "checked": [false, false, false, false, false, false, false, false]}, "9": {"theme": "Recovering a Sense of Compassion", "tasks": ["Read your morning pages! This process is best undertaken with two colored markers, one to highlight insights and another to highlight actions needed. Do not judge your pages or yourself. This is very important. Yes, they will be boring. Yes, they may be painful. Consider them a map. Take them as information, not an indictment. Take Stock: Whom have you consistently been complaining about? What have you procrastinated on? What blessedly have you allowed yourself to change or accept? Write about these things below. Take Heart: Many of us notice an alarming tendency toward black-and- white thinking: \u201cHe\u2019s terrible. He\u2019s wonderful. I love him. I hate him. It\u2019s a great job. It\u2019s a terrible job,\u201d and so forth. Don\u2019t be thrown by this. Acknowledge: The pages have allowed us to vent without self-destruction, to plan without interference, to complain without an audience, to dream without restriction, to know our own minds. Give yourself credit for undertaking them. Give them credit for the changes and growth they have fostered.", "Visualizing: You have already done work with naming your goal and identifying true north. The following exercise asks you to fully imagine having your goal accomplished. Please spend enough time to fill in the juicy details that would really make the experience wonderful for you. Name your goal: I am ______________. In the present tense, describe yourself doing it at the height of your powers! This is your ideal scene. Read this aloud to yourself. Post this above your work area. Read this aloud, daily! For the next week collect actual pictures of yourself and combine them with magazine images to collage your ideal scene described above. Remember, seeing is believing, and the added visual cue of your real self in your ideal scene can make it far more real.", "Priorities: List for yourself your creative goals for the year. List for yourself your creative goals for the month. List for yourself your creative goals for the week.", "Creative U-Turns: All of us have taken creative U-turns. Name one of yours. Name three more. Name the one that just kills you. Forgive yourself. Forgive yourself for all failures of nerve, timing, and initiative. Devise a personalized list of affirmations to help you do better in the future. Very gently, very gently, consider whether any aborted, abandoned, savaged, or sabotaged brainchildren can be rescued. Remember, you are not alone. All of us have taken creative U-turns. Choose one creative U-turn. Retrieve it. Mend it. Do not take a creative U-turn now. Instead, notice your resistance. Morning pages seeming difficult? Stupid? Pointless? Too obvious? Do them anyway. What creative dreams are lurching toward possibility? Admit that they frighten you. Choose an artist\u2019s totem. It might be a doll, a stuffed animal, a carved figurine, or a wind-up toy. The point is to choose something you immediately feel a protective fondness toward. Give your totem a place of honor and then honor it by not beating up on your artist child.", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4], "readingIdx": 0, "checked": [false, false, false, false, false]}, "10": {"theme": "Recovering a Sense of Self-Protection", "tasks": ["The Deadlies: Take a piece of paper and cut seven small strips from it. On each strip write one of the following words: \u201calcohol,\u201d \u201cdrugs,\u201d \u201csex,\u201d \u201cwork,\u201d \u201cmoney,\u201d \u201cfood,\u201d \u201cfamily/ friends.\u201d Fold these strips of paper and place them in an envelope. We call these folded slips \u201cthe deadlies.\u201d You\u2019ll see why in a minute. Now draw one of the deadlies from the envelope and write five ways in which it has had a negative impact on your life. (If the one you choose seems difficult or inapplicable to you, consider this resistance.) You will do this seven times, each time putting back the previous slip of paper so that you are always drawing from seven possible choices. Yes, you may repeatedly draw the same deadly. Yes, this is significant. Very often, it is the last impact on the final list of an annoying \u201cOh no, not again\u201d that yields a break, through denial, into clarity.I will tell you what I have learned myself. For me, a long five or six mile walk helps. And", "Touchstones: Make a quick list of things you love, happiness touchstones for you. River rocks worn smooth, willow trees, cornflowers, chicory, real Italian bread, homemade vegetable soup, the BoDeans\u2019 music, black beans and rice, the smell of new-mown grass, blue velvet (the cloth and the song), Aunt Minnie\u2019s crumb pie . . . You may want to copy them on a blank sheet of paper and post it where it can console you and remind you of your own personal touchstones. You may want to draw one of the items on your list\u2014or acquire it. If you love blue velvet, get a remnant and use it as a runner on a sideboard or dresser, or tack it to the wall and mount images on it. Play a little.", "The Awful Truth: Answer the following questions. Tell the truth. What habit do you have that gets in the way of your creativity? Tell the truth. What do you think might be a problem? It is. What do you plan to do about the habit or problem? What is your payoff in holding on to this block? If you can\u2019t figure out your payoff, ask a trusted friend. Tell the truth. Which friends make you doubt yourself ? (The self-doubt is yours already, but they trigger it.) Tell the truth. Which friends believe in you and your talent? (The talent is yours, but they make you feel it.) What is the payoff in keeping your destructive friends? If the answer is \u201cI like them,\u201d the next question is \u201cWhy?\u201d Which destructive habits do your destructive friends share with your", "destructive self ? Which constructive habits do your constructive friends share with your constructive self ? How often\u2014even before we began\u2014 have we declared a task \u201cimpossible\u201d? And how often have we construed a picture of ourselves as being inadequate? . . . A great deal depends upon the thought patterns we choose and on the persistence with which we affirm them. PIERO FERRUCCI", "Setting a Bottom Line: Working with your answers to the questions on page 133, try setting a bottom line for yourself. Begin with five of your most painful behaviors. You can always add more later. \u2022 If you notice that your evenings are typically gobbled up by your boss\u2019s extra assignments, then a rule must come into play: No work after six. \u2022 If you wake at six and could write for an hour if you were not interrupted to look for socks and make breakfast and do ironing, the rule might be: No interrupting Mommy before seven A.M. \u2022 If you are working too many jobs and too many hours, you may need to look at your billing. Are you pricing yourself appropriately? Do some footwork. What are others in your field receiving? Raise your prices and lower your workload. Bottom Line 1. I will no longer work weekends. 2. I will no longer bring work along with me on social occasions. 3. I will no longer place my work before my creative commitments. (No more canceling piano lessons or drawing class because of a sudden new deadline from my boss the workaholic.) 4. I will no longer postpone lovemaking to do late-night reading for work. 5. I will no longer accept business calls at home after six.", "It\u2019s a funny thing about life; if you refuse to accept anything but the best, you very often get it. W. SOMERSET MAUGHAM", "Cherishing: 1. List five small victories. 2. List three nurturing actions you took for your artist. 3. List three actions you could take to comfort your artist. 4. Make three nice promises to yourself. Keep them. 5. Do one lovely thing for yourself each day this week. Check-In", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4, 0, 1, 2], "readingIdx": 0, "checked": [false, false, false, false, false, false, false, false]}, "11": {"theme": "Recovering a Sense of Autonomy", "tasks": ["Write down the following headings with space for lists below each of them: Health, Possessions, Leisure, Relationships, Creativity, Career, and Spirituality. With no thought as to practicality, list five wishes in each area. All right, it\u2019s a lot. Let yourself dream a little here.Art does not reproduce the visible; rather, it makes it visible. The moon develops creativity as chemicals develop photographic images. NORMA JEAN HARRIS Tape your own voice reading the Basic Principles (see page xi). Choose a favorite essay from this book and tape that as well. Use this tape for meditation.", "Working with the Honest Changes section in Week Four of The Artist\u2019s Way, inventory for yourself the ways you have changed since beginning your recovery. Write out, in longhand, your artist\u2019s prayer from Week Four. Place it in your wallet.", "List five ways you will change as you continue.", "List five ways you plan to nurture yourself in the next six months: courses you will take, supplies you will allow yourself, artist\u2019s dates, and vacations just for you.", "Below, plan one week\u2019s nurturing for yourself. This means one concrete, loving action every single day for one week: please binge!", "Once more, reexamine your God concept. Does your belief system limit or support your creative expansion? Are you open-minded about altering your concept of God? Write and mail an encouraging letter to your inner artist. This sounds silly and feels very, very good to receive. Remember that your artist is a child and loves praise and encouragement and festive plans.", "List ten examples of personal synchronicity that support the possibility of a nurturing creative force. Check-In", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4, 0, 1, 2], "readingIdx": 0, "checked": [false, false, false, false, false, false, false, false]}, "12": {"theme": "Recovering a Sense of Faith", "tasks": ["Write down any resistance, angers, and fears you have about going on from here. We all have them.", "Take a look at your current areas of procrastination. What are the payoffs in your waiting? Locate the hidden fears.", "Sneak a peek at Week One, Core Negative Beliefs, on page 30 of The Artist\u2019s Way. Laugh. Yes, the nasty critters are still there. Note your progress. Read yourself the affirmations on pages 36 and 37. Write some affirmations about your continued creativity as you end the course. Mend any mending.", "Use your God jar. Start with your fear list from this week\u2019s Task One. When worried, remind yourself it\u2019s in the jar\u2014\u201cGod\u2019s got it.\u201d Then take the next action. Describe this process below. Select a God jar. A what? A jar, a box, a vase, a container. Something to put your fears, your resentments, your hopes, your dreams, your worries into.", "Now check how: Honestly, what would you most like to create? What oddball paths would you open-mindedly dare to try? What appearances are you willing to shed to pursue your dreams? Repot any pinched and languishing plants.", "List five people to whom you can talk about your dreams and with whom you feel supported to dream and then plan.", "Reread The Artist\u2019s Way. Share it with a friend. Remember that the miracle is one artist sharing with another. Trust God. Trust yourself. Good luck and God bless you! Check-In", "Check-in: How many days did you do your morning pages? Did you do your artist's date? Note any synchronicity or significant issues."], "dayAssignments": [0, 1, 2, 3, 4, 0, 1, 2], "readingIdx": 0, "checked": [false, false, false, false, false, false, false, false]}};
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const SK = 'aw_v4';
+function load(){try{return JSON.parse(localStorage.getItem(SK))||{};}catch{return {};}}
+function save(d){localStorage.setItem(SK,JSON.stringify(d));}
+function toISO(d){return d.toISOString().slice(0,10);}
+function fromISO(s){return new Date(s+'T12:00:00');}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+function fmtShort(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function fmtLong(d){return d.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});}
+function getMonday(d){const dt=new Date(d);const day=dt.getDay();const diff=dt.getDate()-day+(day===0?-6:1);dt.setDate(diff);dt.setHours(0,0,0,0);return dt;}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function todayISO(){return toISO(new Date());}
+let viewWeekNum=null,pendingTasks=[],reschedTarget=null;
+
+function initData(){
+  const data=load();
+  if(!data.weeks)data.weeks={};
+  for(let w=1;w<=12;w++){
+    if(!data.weeks[w]){
+      const wb=WORKBOOK[w];
+      data.weeks[w]={theme:wb.theme,tasks:[...wb.tasks],dayAssignments:[...wb.dayAssignments],readingIdx:wb.readingIdx,checked:new Array(wb.tasks.length).fill(false),startMonday:null};
+    }
+  }
+  if(!data.currentWeek)data.currentWeek=1;
+  save(data);return data;
+}
+
+function setCurrentWeek(val){
+  if(!val)return;
+  const data=load();
+  data.currentWeek=parseInt(val);
+  save(data);
+  viewWeekNum=data.currentWeek;
+  renderProgramBar();renderToday();
+  if(document.getElementById('panel-week').classList.contains('active'))renderWeek();
+}
+
+function setWeekStart(){
+  const val=document.getElementById('cur-wk-date').value;
+  if(!val)return;
+  const data=load();
+  const wn=data.currentWeek||1;
+  const mon=toISO(getMonday(fromISO(val)));
+  data.weeks[wn].startMonday=mon;
+  const thisMon=fromISO(mon);
+  const progStart=new Date(thisMon);
+  progStart.setDate(thisMon.getDate()-(wn-1)*7);
+  data.programStart=toISO(progStart);
+  save(data);
+  renderProgramBar();renderToday();
+  if(document.getElementById('panel-week').classList.contains('active'))renderWeek();
+}
+
+function getMondayForWeek(wn){
+  const data=load();
+  if(data.weeks&&data.weeks[wn]&&data.weeks[wn].startMonday)return data.weeks[wn].startMonday;
+  if(!data.programStart)return null;
+  const start=getMonday(fromISO(data.programStart));
+  const mon=new Date(start);mon.setDate(start.getDate()+(wn-1)*7);
+  return toISO(mon);
+}
+
+function switchTab(name){
+  const names=['today','week','setup','history'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='today')renderToday();
+  if(name==='week'){if(!viewWeekNum){const d=load();viewWeekNum=d.currentWeek||1;}renderWeek();}
+  if(name==='setup')renderSetup();
+  if(name==='history')renderHistory();
+  renderProgramBar();
+}
+
+function renderProgramBar(){
+  const data=load();
+  const cur=data.currentWeek||1;
+  const pct=Math.round(((cur-1)/12)*100);
+  let dots='';
+  for(let w=1;w<=12;w++){
+    const cls=w<cur?'done':w===cur?'current':'';
+    const wd=data.weeks&&data.weeks[w];
+    const done=wd?(wd.checked||[]).filter(Boolean).length:0;
+    const total=wd?(wd.tasks||[]).length:0;
+    dots+=`<div class="prog-dot ${cls}" data-tip="Week ${w}: ${done}/${total}" onclick="jumpToWeek(${w})"></div>`;
+  }
+  document.getElementById('prog-wrap').innerHTML=`
+    <div class="prog-lbl"><span>Program Progress</span><span>Week ${cur} of 12</span></div>
+    <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+    <div class="prog-dots">${dots}</div>`;
+  const sel=document.getElementById('cur-wk-sel');
+  if(sel)sel.value=String(cur);
+}
+
+function jumpToWeek(n){viewWeekNum=n;switchTab('week');}
+
+function renderToday(){
+  const data=load();
+  const body=document.getElementById('today-body');
+  const todayDate=new Date();todayDate.setHours(0,0,0,0);
+  const dow=todayDate.getDay();
+  if(dow===0||dow===6){
+    body.innerHTML=`<div class="empty"><div class="empty-glyph">✦</div><p>Weekend — rest and let creativity breathe.</p><p style="font-family:var(--font-mono);font-size:.52rem;color:var(--ink-faint);margin-top:.3rem">Morning pages still apply.</p></div>`;
+    return;
+  }
+  const wn=data.currentWeek||1;
+  const wd=data.weeks&&data.weeks[wn];
+  if(!wd||!wd.tasks||!wd.tasks.length){
+    body.innerHTML=`<div class="empty"><div class="empty-glyph">✦</div><p>No tasks for Week ${wn}.</p><button class="btn btn-p" onclick="switchTab('setup')" style="margin-top:.75rem">Setup</button></div>`;
+    return;
+  }
+  const mondayISO=getMondayForWeek(wn);
+  const dayIdx=dow-1;
+  const assignments=wd.dayAssignments||[];
+  const checked=wd.checked||[];
+  const todayTasks=wd.tasks.map((t,i)=>({t,i,day:assignments[i]||0})).filter(x=>x.day===dayIdx);
+  const mondayDate=mondayISO?fromISO(mondayISO):null;
+  const todayActual=mondayDate?addDays(mondayDate,dayIdx):todayDate;
+  let html=`<div style="margin-bottom:1.25rem">
+    <div style="font-family:var(--font-mono);font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--rust);margin-bottom:.25rem">Week ${wn} · ${DAYS[dayIdx]}</div>
+    <div style="font-size:1.4rem;font-style:italic;font-weight:300">${fmtLong(todayActual)}</div>
+    <div style="font-family:var(--font-mono);font-size:.5rem;color:var(--ink-faint);margin-top:.2rem">${wd.theme||''}</div>
+  </div>`;
+  if(!todayTasks.length){
+    html+=`<div class="empty"><div class="empty-glyph">✦</div><p>Nothing assigned for today.</p></div>`;
+  } else {
+    const done=todayTasks.filter(x=>checked[x.i]).length;
+    html+=`<div class="task-list">`;
+    todayTasks.forEach(({t,i})=>{
+      const isDone=checked[i]===true;
+      const isRead=wd.readingIdx===i;
+      html+=`<div class="task-item${isDone?' done':''}${isRead?' reading':''}">
+        <div class="task-chk" onclick="toggleTask(${wn},${i})" role="checkbox" aria-checked="${isDone}" tabindex="0">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#f5f0e8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="task-text">${esc(t)}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+    if(done===todayTasks.length)html+=`<div class="all-done"><span>✦ Done for today ✦</span>See you tomorrow.</div>`;
+  }
+  const totalDone=(checked||[]).filter(Boolean).length;
+  const total=wd.tasks.length;
+  const pct=Math.round((totalDone/total)*100);
+  html+=`<div style="margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid var(--border-light)">
+    <div class="pw-lbl"><span>Week ${wn} overall</span><span>${totalDone}/${total}</span></div>
+    <div class="pw-track"><div class="pw-fill" style="width:${pct}%"></div></div>
+  </div>`;
+  body.innerHTML=html;
+  body.querySelectorAll('.task-chk').forEach(el=>el.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();el.click();}}));
+}
+
+function changeWeek(dir){
+  const data=load();
+  viewWeekNum=Math.max(1,Math.min(12,(viewWeekNum||data.currentWeek||1)+dir));
+  renderWeek();
+}
+
+function renderWeek(){
+  const data=load();
+  const wn=viewWeekNum||(data.currentWeek||1);
+  const wd=data.weeks&&data.weeks[wn];
+  const mondayISO=getMondayForWeek(wn);
+  const monday=mondayISO?fromISO(mondayISO):null;
+  document.getElementById('wk-badge').textContent=`Week ${wn} of 12`;
+  document.getElementById('wk-title').textContent=monday?'Week of '+fmtShort(monday):`Week ${wn}`;
+  document.getElementById('wk-theme').textContent=wd?wd.theme:'';
+  const rBar=document.getElementById('resched-bar');
+  rBar.style.display='flex';
+  document.getElementById('resched-date').value=mondayISO||toISO(getMonday(new Date()));
+  if(!wd||!wd.tasks||!wd.tasks.length){
+    document.getElementById('week-body').innerHTML=`<div class="empty"><div class="empty-glyph">✦</div><p>No tasks for Week ${wn}.</p></div>`;
+    return;
+  }
+  const tasks=wd.tasks,assignments=wd.dayAssignments||tasks.map((_,i)=>i%5),checked=wd.checked||[],readingIdx=wd.readingIdx;
+  const done=checked.filter(Boolean).length,total=tasks.length,pct=Math.round((done/total)*100);
+  let html=`<div class="stats">
+    <div class="stat"><div class="stat-lbl">Total</div><div class="stat-val">${total}</div></div>
+    <div class="stat"><div class="stat-lbl">Done</div><div class="stat-val">${done}</div></div>
+    <div class="stat"><div class="stat-lbl">Left</div><div class="stat-val">${total-done}</div></div>
+    <div class="stat"><div class="stat-lbl">Progress</div><div class="stat-val">${pct}%</div></div>
+  </div>
+  <div class="pw-wrap"><div class="pw-lbl"><span>Weekly progress</span><span>${done} of ${total}</span></div>
+  <div class="pw-track"><div class="pw-fill" style="width:${pct}%"></div></div></div>`;
+  const byDay=[[],[],[],[],[]];
+  tasks.forEach((t,i)=>{const d=Math.min(4,Math.max(0,assignments[i]!==undefined?assignments[i]:i%5));byDay[d].push({t,i});});
+  const todayObj=new Date();todayObj.setHours(0,0,0,0);
+  for(let d=0;d<5;d++){
+    const dayDate=monday?addDays(monday,d):null;
+    const isToday=dayDate&&toISO(dayDate)===todayISO();
+    const isPast=dayDate&&dayDate<todayObj;
+    let pill='';
+    if(isToday)pill=`<div class="day-pill today">Today</div>`;
+    else if(isPast)pill=`<div class="day-pill past">Past</div>`;
+    html+=`<div class="day-sec"><div class="day-hdr">
+      <div class="day-name">${DAYS[d]}</div>
+      <div class="day-date">${dayDate?fmtShort(dayDate):''}</div>${pill}
+    </div><div class="task-list">`;
+    if(!byDay[d].length){html+=`<div class="day-rest">— Rest day —</div>`;}
+    else{byDay[d].forEach(({t,i})=>{
+      const isDone=checked[i]===true,isRead=readingIdx===i;
+      html+=`<div class="task-item${isDone?' done':''}${isRead?' reading':''}">
+        <div class="task-chk" onclick="toggleTask(${wn},${i})" role="checkbox" aria-checked="${isDone}" tabindex="0">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#f5f0e8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="task-num">${String(i+1).padStart(2,'0')}</div>
+        <div class="task-text">${esc(t)}</div>
+        <button class="task-del" onclick="deleteTask(${wn},${i})">x</button>
+      </div>`;
+    });}
+    html+=`</div></div>`;
+  }
+  if(done===total&&total>0)html+=`<div class="all-done"><span>✦ Week ${wn} Complete ✦</span>On to the next.</div>`;
+  document.getElementById('week-body').innerHTML=html;
+  document.getElementById('week-body').querySelectorAll('.task-chk').forEach(el=>el.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();el.click();}}));
+}
+
+function toggleTask(wn,i){
+  const data=load();
+  const c=data.weeks[wn].checked||[];c[i]=!c[i];
+  data.weeks[wn].checked=c;save(data);
+  renderWeek();renderToday();renderProgramBar();
+}
+
+function deleteTask(wn,i){
+  const data=load();const w=data.weeks[wn];
+  w.tasks.splice(i,1);w.checked.splice(i,1);w.dayAssignments.splice(i,1);
+  if(w.readingIdx===i)w.readingIdx=null;else if(w.readingIdx>i)w.readingIdx--;
+  save(data);renderWeek();
+}
+
+function rescheduleWeek(){
+  const val=document.getElementById('resched-date').value;if(!val)return;
+  const data=load();const wn=viewWeekNum||(data.currentWeek||1);
+  data.weeks[wn].startMonday=toISO(getMonday(fromISO(val)));
+  save(data);renderWeek();renderProgramBar();
+}
+
+function renderSetup(){
+  document.getElementById('setup-body').innerHTML=`
+    <div class="setup-sec">
+      <div class="setup-title">Add or replace tasks for a week</div>
+      <div class="setup-hint">All 12 weeks are pre-loaded from the workbook. Use this to add extra tasks or override a week. Select a week, paste text, extract, review, save.</div>
+      <select class="wk-sel" id="manual-wk"><option value="">Select week</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">Week ${i+1}</option>`).join('')}</select>
+      <textarea id="task-input" placeholder="Paste exercises from the book..."></textarea>
+      <div class="setup-hint" style="margin-top:.4rem">Numbered exercises kept whole. Paragraphs become one task each.</div>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="extractTasks()">Extract Tasks</button>
+        <button class="btn btn-g" onclick="clearSetup()">Clear</button>
+      </div>
+      <div class="msg" id="setup-msg"></div>
+      <div id="ext-sec" class="ext-sec" style="display:none">
+        <div class="ext-title">Review extracted tasks</div>
+        <div class="ext-hint">Uncheck to skip · Click to edit · x to remove</div>
+        <div id="ext-list"></div>
+        <div class="ornament">✦ ✦ ✦</div>
+        <div class="btn-row">
+          <button class="btn btn-p" onclick="saveExtracted()">Save &amp; Assign Days</button>
+          <button class="btn btn-g" onclick="cancelExtracted()">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <div class="setup-sec">
+      <div class="setup-title">Reset a week to workbook defaults</div>
+      <div class="setup-hint">Restores the original tasks for that week. Does not clear checkmarks.</div>
+      <select class="wk-sel" id="reset-wk"><option value="">Select week</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">Week ${i+1}</option>`).join('')}</select>
+      <div class="btn-row"><button class="btn btn-p" onclick="resetWeek()">Reset Week</button></div>
+      <div class="msg" id="reset-msg"></div>
+    </div>`;
+}
+
+function resetWeek(){
+  const wn=parseInt(document.getElementById('reset-wk').value);
+  if(!wn){document.getElementById('reset-msg').textContent='Select a week.';return;}
+  const wb=WORKBOOK[wn],data=load(),existing=data.weeks[wn]||{};
+  data.weeks[wn]={...existing,tasks:[...wb.tasks],dayAssignments:[...wb.dayAssignments],readingIdx:wb.readingIdx};
+  save(data);
+  const el=document.getElementById('reset-msg');el.style.color='var(--ink-faint)';el.textContent=`Week ${wn} reset to workbook defaults.`;
+  renderProgramBar();
+}
+
+function extractTasks(){
+  const raw=document.getElementById('task-input').value.trim();
+  if(!raw){setMsg('Paste some text first.','var(--rust)');return;}
+  const wn=document.getElementById('manual-wk').value;
+  if(!wn){setMsg('Select a week number.','var(--rust)');return;}
+  const normalized=raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const lines=normalized.split('\n');const chunks=[];let current=null;
+  for(const line of lines){const s=line.trim();if(!s)continue;
+    if(/^\d+\.\s+/.test(s)){if(current!==null)chunks.push(current.trim());current=s;}
+    else{if(current!==null){current+=' '+s;}else{current=s;}}
+  }
+  if(current!==null&&current.trim())chunks.push(current.trim());
+  if(!chunks.length){normalized.split(/\n{2,}/).map(p=>p.replace(/\n/g,' ').trim()).filter(p=>p.length>5).forEach(p=>chunks.push(p));}
+  if(!chunks.length){setMsg('No tasks found.','var(--rust)');return;}
+  pendingTasks=chunks.map(t=>({text:t,checked:true}));
+  setMsg('','');renderExtracted();document.getElementById('ext-sec').style.display='block';
+}
+
+function renderExtracted(){
+  const list=document.getElementById('ext-list');list.innerHTML='';
+  pendingTasks.forEach((task,i)=>{
+    const row=document.createElement('div');row.className='ext-item';
+    const cb=document.createElement('input');cb.type='checkbox';cb.className='ext-cb';cb.checked=task.checked;
+    cb.addEventListener('change',()=>{pendingTasks[i].checked=cb.checked;});
+    const ta=document.createElement('textarea');ta.className='ext-ta';ta.value=task.text;ta.rows=1;
+    ta.addEventListener('input',()=>{pendingTasks[i].text=ta.value;ar(ta);});
+    const del=document.createElement('button');del.className='ext-del';del.textContent='x';
+    del.addEventListener('click',()=>{pendingTasks.splice(i,1);renderExtracted();});
+    row.appendChild(cb);row.appendChild(ta);row.appendChild(del);list.appendChild(row);
+    setTimeout(()=>ar(ta),0);
+  });
+}
+
+function ar(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+
+function saveExtracted(){
+  const tasks=pendingTasks.filter(t=>t.checked&&t.text.trim()).map(t=>t.text.trim());
+  if(!tasks.length){setMsg('No tasks checked.','var(--rust)');return;}
+  const wn=parseInt(document.getElementById('manual-wk').value);
+  if(!wn){setMsg('Select a week.','var(--rust)');return;}
+  const readRe=/\b(read|reading|chapter|affirmation reading)\b/i;
+  let readingIdx=tasks.findIndex(t=>readRe.test(t.slice(0,60)));
+  if(readingIdx<0)readingIdx=0;
+  const n=tasks.length,assignments=new Array(n),buckets=[[],[],[],[],[]];
+  assignments[readingIdx]=0;buckets[0].push(readingIdx);
+  tasks.forEach((_,i)=>{if(i===readingIdx)return;const minD=buckets.reduce((m,b,d)=>b.length<buckets[m].length?d:m,0);assignments[i]=minD;buckets[minD].push(i);});
+  const data=load(),existing=data.weeks[wn]||{};
+  data.weeks[wn]={...existing,tasks,checked:new Array(tasks.length).fill(false),dayAssignments:assignments,readingIdx};
+  save(data);pendingTasks=[];
+  document.getElementById('ext-sec').style.display='none';
+  document.getElementById('task-input').value='';
+  setMsg(`Week ${wn}: saved ${tasks.length} tasks.`,'var(--ink-faint)');
+  renderProgramBar();viewWeekNum=wn;setTimeout(()=>switchTab('week'),700);
+}
+
+function cancelExtracted(){pendingTasks=[];document.getElementById('ext-sec').style.display='none';}
+function clearSetup(){document.getElementById('task-input').value='';document.getElementById('setup-msg').textContent='';pendingTasks=[];document.getElementById('ext-sec').style.display='none';}
+function setMsg(t,c){const el=document.getElementById('setup-msg');el.textContent=t;el.style.color=c;}
+
+function renderHistory(){
+  const data=load();const body=document.getElementById('history-body');let html='';
+  for(let w=1;w<=12;w++){
+    const wd=data.weeks&&data.weeks[w];
+    if(!wd||!wd.tasks||!wd.tasks.length)continue;
+    const mondayISO=getMondayForWeek(w);
+    const monday=mondayISO?fromISO(mondayISO):null;
+    const friday=monday?addDays(monday,4):null;
+    const done=(wd.checked||[]).filter(Boolean).length,total=wd.tasks.length,pct=total?Math.round((done/total)*100):0;
+    html+=`<div class="hist-item">
+      <div class="hist-hd">
+        <div class="hist-wlbl"><span>Week ${w}</span>${monday?fmtShort(monday)+' – '+fmtShort(friday):'Not scheduled'}<br><span style="font-style:italic;font-family:var(--font-serif);font-size:.82rem;letter-spacing:0;text-transform:none;color:var(--ink-faint)">${wd.theme||''}</span></div>
+        <span class="hist-cnt${pct===100?' done':''}">${done}/${total}${pct===100?' ✦':''}</span>
+      </div>
+      <div class="hist-track"><div class="hist-fill" style="width:${pct}%"></div></div>
+      <div class="hist-acts">
+        <button class="hist-btn" onclick="jumpToWeek(${w})">View</button>
+        <button class="hist-btn" onclick="openModal(${w})">Reschedule</button>
+        <button class="hist-btn" onclick="clearWeekChecks(${w})">Reset progress</button>
+      </div>
+    </div>`;
+  }
+  if(!html)html=`<div class="empty"><div class="empty-glyph">✦</div><p>No week data yet.</p></div>`;
+  body.innerHTML=html;
+}
+
+function clearWeekChecks(wn){
+  const data=load();
+  if(data.weeks&&data.weeks[wn])data.weeks[wn].checked=new Array(data.weeks[wn].tasks.length).fill(false);
+  save(data);renderHistory();renderProgramBar();
+}
+
+function openModal(wn){
+  reschedTarget=wn;
+  document.getElementById('modal-date').value=getMondayForWeek(wn)||toISO(getMonday(new Date()));
+  document.getElementById('modal').classList.add('open');
+}
+function confirmReschedule(){
+  const val=document.getElementById('modal-date').value;
+  if(!val||!reschedTarget){closeModal();return;}
+  const data=load();
+  data.weeks[reschedTarget].startMonday=toISO(getMonday(fromISO(val)));
+  save(data);closeModal();renderWeek();renderHistory();renderProgramBar();
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');reschedTarget=null;}
+
+initData();
+renderProgramBar();
+renderToday();
+</script>
+</body>
+</html>
